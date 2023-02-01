@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
-	"bytes"
-	"strings"
 	"path/filepath"
+	"strings"
+
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +17,7 @@ var path string
 var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build MPI function/project",
-	Long: "\nBuild MPI function/project",
+	Long:  "\nBuild MPI function/project",
 	Example: `  rhino build ./hello.cpp --image foo/hello:v1.0
   rhino build /src/testbench -i bar/mpibench:v2.1`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,12 +44,12 @@ func init() {
 }
 
 func builder(image string, path string) error {
-	f, err := os.Stat(path); 
+	f, err := os.Stat(path)
 	if err != nil {
 		return err
 	}
 	var execArgs []string
-	funcName :=  getFuncName(image)
+	funcName := getFuncName(image)
 
 	// TODO: compile proj
 	if f.IsDir() {
@@ -62,7 +63,7 @@ func builder(image string, path string) error {
 		var compile string
 		if suffix == ".c" {
 			compile = "mpicc"
-		} else if suffix == ".cpp"{
+		} else if suffix == ".cpp" {
 			compile = "mpic++"
 		} else {
 			return fmt.Errorf("only support c and cpp file")
@@ -86,20 +87,20 @@ func builder(image string, path string) error {
 }
 
 func execute(commandName string, params []string) (string, error) {
-    cmd := exec.Command(commandName, params...)
-    var out bytes.Buffer
-    cmd.Stdout = &out
-    cmd.Stderr = os.Stderr
-    err := cmd.Start()
-    if err != nil {
-        return "", err
-    }
-    err = cmd.Wait()
-    return out.String(), err
+	cmd := exec.Command(commandName, params...)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	if err != nil {
+		return "", err
+	}
+	err = cmd.Wait()
+	return out.String(), err
 }
 
 func getFuncName(image string) string {
 	nameTag := strings.Split(image, "/")
-	funcName := strings.Split(nameTag[len(nameTag) - 1], ":")[0]
+	funcName := strings.Split(nameTag[len(nameTag)-1], ":")[0]
 	return funcName
 }

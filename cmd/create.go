@@ -14,14 +14,14 @@ import (
 
 var language string
 var createCmd = &cobra.Command{
-	Use:     "create",
-	Short: 	 "Create a new mpi function/project",
-	Long: 	 "\nCreate a new mpi function/project",
+	Use:   "create",
+	Short: "Create a new mpi function/project",
+	Long:  "\nCreate a new mpi function/project",
 	Example: `  C function:   rhino create func_name --lang c
   C++ function: rhino create func_name -l cpp
   MPI project:  rhino create proj_name --lang dockerfile`,
-  	Args: 	 argsCheck,
-  	RunE:    runCreate,
+	Args: argsCheck,
+	RunE: runCreate,
 }
 
 func init() {
@@ -33,7 +33,7 @@ func argsCheck(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 && len(language) == 0 {
 		cmd.Help()
 		os.Exit(0)
-	} else if len(language) == 0{
+	} else if len(language) == 0 {
 		return fmt.Errorf("language cannot be empty")
 	} else if len(args) == 0 {
 		return fmt.Errorf("function or project name cannot be empty")
@@ -60,7 +60,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 		fmt.Println("Error: folder", dirName, "could not create")
 		os.Exit(0)
 	}
-	
+
 	// download the template from github, if fail, delete folder
 	templateURL := "https://github.com/OpenRHINO/templates/raw/main/func.zip"
 	if err := downloadTemplate(templateURL, dirName); err != nil {
@@ -90,34 +90,34 @@ func downloadTemplate(templateURL, dstDir string) error {
 
 	// 解压模板文件包
 	zr, err := zip.OpenReader("template.zip")
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 	for _, file := range zr.File {
 		path := filepath.Join(dstDir, file.Name)
 		// 如果是目录，则创建目录，并跳过当前循环，继续处理下一个
 		if file.FileInfo().IsDir() {
-            if err := os.MkdirAll(path, file.Mode()); err != nil {
-                return err
-            }
-            continue
+			if err := os.MkdirAll(path, file.Mode()); err != nil {
+				return err
+			}
+			continue
 		}
 
 		// 解压文件到目标文件夹
-        fr, err := file.Open()
-        if err != nil {
-            return err
-        }
-        fw, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, file.Mode())
-        if err != nil {
-            return err
-        }
-        _, err = io.Copy(fw, fr)
-        if err != nil {
-            return err
-        }
+		fr, err := file.Open()
+		if err != nil {
+			return err
+		}
+		fw, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, file.Mode())
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(fw, fr)
+		if err != nil {
+			return err
+		}
 		fw.Close()
-        fr.Close()
+		fr.Close()
 	}
 	zr.Close()
 
