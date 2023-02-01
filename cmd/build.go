@@ -57,7 +57,7 @@ func builder(image string, path string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf(out)
+		fmt.Print(out)
 	} else {
 		suffix := filepath.Ext(path)
 		var compile string
@@ -80,7 +80,7 @@ func builder(image string, path string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf(out)
+		fmt.Print(out)
 		// TODO: add image cleaner
 	}
 	return nil
