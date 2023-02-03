@@ -1,7 +1,7 @@
 package main
 
 import (
-	"openrhino.org/rhino-cli/cmd"
+	"github.com/OpenRHINO/RHINO-CLI/cmd"
 )
 
 func main() {

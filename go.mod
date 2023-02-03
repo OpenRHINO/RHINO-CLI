@@ -1,4 +1,4 @@
-module openrhino.org/rhino-cli
+module github.com/OpenRHINO/RHINO-CLI
 
 go 1.19
 
@@ -7,7 +7,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
-	openrhino.org/operator v1.0.0
+	github.com/OpenRHINO/RHINO-Operator v1.0.0
 )
 
 require (
@@ -42,4 +42,4 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace openrhino.org/operator => ../RHINO-Operator
+replace github.com/OpenRHINO/RHINO-Operator => ../RHINO-Operator
