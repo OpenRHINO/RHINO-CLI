@@ -13,7 +13,6 @@ import (
 )
 
 var image string
-var path string
 var file string
 
 var buildCmd = &cobra.Command{
@@ -25,20 +24,20 @@ var buildCmd = &cobra.Command{
   // build mpi proj(located at root of the folder with makefile)
   rhino build -i bar/mpibench:v2.1
   // build mpi proj(provide makefile path and parameters for make)
-  rhino build ./testbench -f ./testbench/config/Makefile -i bar/mpibench:v2.1 -- make -j all arch=Linux`,
+  rhino build -f ./config/Makefile -i bar/mpibench:v2.1 -- make -j all arch=Linux`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var path string
 		if len(args) == 0 && len(image) == 0 {
 			cmd.Help()
 			os.Exit(0)
 		} else if len(image) == 0 {
 			return fmt.Errorf("please provide the image name")
 		} else if len(args) == 0 || args[0] == "make" {
-			fmt.Println("Using current folder as root")
+			fmt.Println("No source file is specified")			
+			fmt.Println("Using current folder to build...")
 			path = "./"
-			args = append([]string{"./"}, args...)
 		} else {
 			path = args[0]
-			fmt.Println("Project root:", path)
 		}
 		if err := builder(args, image, path, file); err != nil {
 			fmt.Println("Error:", err.Error())
@@ -51,7 +50,7 @@ var buildCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(buildCmd)
 	buildCmd.Flags().StringVarP(&image, "image", "i", "", "full image form: [registry]/[namespace]/[name]:[tag]")
-	buildCmd.Flags().StringVarP(&file, "file", "f", "", "makefile path of the project")
+	buildCmd.Flags().StringVarP(&file, "file", "f", "", "relative path of the makefile")
 }
 		
 func builder(args []string, image string, path string, file string) error {
@@ -75,11 +74,20 @@ func builder(args []string, image string, path string, file string) error {
 		if err != nil {
 			return err
 		}
-		buildCommand = args[1:]
+		fmt.Println("Makefile path:", makefilePath)
+		if len(args) > 0 {
+			buildCommand = args
+		}
 		fmt.Println("Build command:", buildCommand)		
 
-		execCommand = "echo"
-		execArgs = []string{"hello"}
+		execCommand = "docker"
+		execArgs = []string{
+			"build", "-t", image,
+			"--build-arg", "func_name=" + funcName,
+			"--build-arg", "file=" + makefilePath,
+			"--build-arg", "make_args=" + strings.Join(buildCommand[1:], " "),
+			"-f", "./proj.dockerfile", ".",
+		}
 	} else {
 		suffix := filepath.Ext(path)
 		var compile string
