@@ -8,7 +8,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-
+#include <alloca.h>
 #include <assert.h>
 
 #ifdef HAVE_ALLOCA_H
