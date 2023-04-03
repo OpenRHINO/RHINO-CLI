@@ -1,6 +1,7 @@
 package main
 
 import (
+	"C"
 	"os"
 
 	"github.com/OpenRHINO/RHINO-CLI/cmd"

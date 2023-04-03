@@ -101,7 +101,7 @@ metadata:
     app.kubernetes.io/instance: rhinojob-`
 	yamlFile += r.funcName + `
     app.kubernetes.io/part-of: rhino-operator
-    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/managed-by: kustomizex
     app.kubernetes.io/created-by: rhino-operator
   name: rhinojob-`
 	yamlFile += r.funcName + `

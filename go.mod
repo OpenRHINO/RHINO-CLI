@@ -3,11 +3,11 @@ module github.com/OpenRHINO/RHINO-CLI
 go 1.19
 
 require (
+	github.com/OpenRHINO/RHINO-Operator v0.1.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
-	github.com/OpenRHINO/RHINO-Operator v0.1.0
 )
 
 require (
