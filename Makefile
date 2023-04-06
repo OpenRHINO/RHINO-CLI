@@ -6,6 +6,12 @@ generate:
 build: generate
 	go build -o rhino .
 
+.PHONY: install
+install: generate
+	go build -o rhino . 
+	mv rhino /usr/local/bin
+
 .PHONY: clean
 clean:
+	rm /usr/local/bin/rhino
 	rm rhino
