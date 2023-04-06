@@ -14,3 +14,4 @@ install: generate
 .PHONY: clean
 clean:
 	rm /usr/local/bin/rhino
+	rm rhino
