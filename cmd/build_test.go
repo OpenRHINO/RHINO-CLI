@@ -72,14 +72,17 @@ func TestBuildSingleFileCpp(t *testing.T) {
 	}
 	assert.Equal(t, true, foundBuiltImage, "test build failed: could not find the test image built using `docker images`")
 
-	// remove test image
-	if foundBuiltImage {
+	defer func() {
+		os.Chdir("..")             // Return to the parent directory.
+		os.RemoveAll(testFuncName) // Remove the created folder.
+
+		if !foundBuiltImage {
+			return
+		}
+
+		// Remove the test image.
 		execShellCmd("docker", []string{"rmi", testFuncImageName})
 		execShellCmd("sh", []string{"-c", "docker rmi -f $(docker images | grep none | grep second | awk '{print $3}')"})
-	}
-
-	// remove template folder
-	os.Chdir("..")
-	os.RemoveAll(testFuncName)
+	}()
 
 }
