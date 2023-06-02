@@ -3,7 +3,7 @@ module github.com/OpenRHINO/RHINO-CLI
 go 1.19
 
 require (
-	github.com/OpenRHINO/RHINO-Operator v0.0.0-20230523064549-a9f0f231b79e
+	github.com/OpenRHINO/RHINO-Operator v0.1.1-0.20230531094513-d79ceb0e5baf
 	github.com/docker/docker v23.0.1+incompatible
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
@@ -57,7 +57,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
-	k8s.io/api v0.27.1 // indirect
+	k8s.io/api v0.27.1
 	k8s.io/apiextensions-apiserver v0.27.1
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230308215209-15aac26d736a // indirect
