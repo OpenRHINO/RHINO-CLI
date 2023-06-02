@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 
 	rhinojob "github.com/OpenRHINO/RHINO-Operator/api/v1alpha2"
 	"github.com/spf13/cobra"
@@ -138,26 +139,31 @@ func (l *LogsOptions) runLogs(cmd *cobra.Command, args []string) error {
 }
 
 func (l *LogsOptions) getPodLogs(clientset *kubernetes.Clientset, podNames []string, index int) error {
-	podLogOpts := corev1.PodLogOptions{}
+	podLogOpts := corev1.PodLogOptions{
+		Follow: l.follow,
+	}
 
 	request := clientset.CoreV1().Pods(l.namespace).GetLogs(podNames[index], &podLogOpts)
 	podLogs, err := request.Stream(context.TODO())
 	if err != nil {
 		return err
 	}
+	defer podLogs.Close()
 
-	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, podLogs)
-	if err != nil {
-		return err
+	if l.follow {
+		// If follow is set, then continuously output the logs to the console
+		_, err = io.Copy(os.Stdout, podLogs)
+		if err != nil {
+			return fmt.Errorf("failed to output logs continuously: %w", err)
+		}
+	} else {
+		buf := new(bytes.Buffer)
+		_, err = io.Copy(buf, podLogs)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve logs: %w", err)
+		}
+		str := buf.String()
+		fmt.Printf("Logs for Pod %s: \n%s\n", podNames[index], str)
 	}
-	str := buf.String()
-
-	fmt.Printf("Logs for Pod %s: \n%s\n", podNames[index], str)
-
-	if err := podLogs.Close(); err != nil {
-		return fmt.Errorf("failed to close podLogs: %w", err)
-	}
-
 	return nil
 }
