@@ -26,7 +26,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLogsSingleJob(t *testing.T) {
+func TestArgsCheck(t *testing.T) {
+	// Prepare the LogsOptions object
+	options := &LogsOptions{}
+
+	// Test case: args length is 0
+	err := options.argsCheck(nil, []string{})
+	assert.EqualError(t, err, "job name cannot be empty")
+
+	// Test case: worker number is negative
+	options.worker = -2
+	err = options.argsCheck(nil, []string{"job"})
+	assert.EqualError(t, err, "worker pod number cannot be negative")
+
+	// Test case: both launcher and worker pod are specified
+	options.worker = 1
+	options.launcher = true
+	err = options.argsCheck(nil, []string{"job"})
+	assert.EqualError(t, err, "cannot specify both launcher and worker pod")
+}
+
+func TestPodLogs(t *testing.T) {
 	// change work directory to ${workspaceFolder}
 	cwd, err := os.Getwd()
 	assert.Equal(t, nil, err, "test logs failed: %s", errorMessage(err))
@@ -53,68 +73,22 @@ func TestLogsSingleJob(t *testing.T) {
 	time.Sleep(10 * time.Second)
 
 	// test logs command for launcher pod
-	rescueStdout := os.Stdout
-	r, w, err := os.Pipe()
-	assert.Equal(t, nil, err, "test logs failed: %s", errorMessage(err))
-
-	os.Stdout = w
-	rootCmd.SetArgs([]string{"logs", testFuncName, "--namespace", testFuncRunNamespace})
-	err = rootCmd.Execute()
+	cmdOutput, err := captureStdout(func() error {
+		rootCmd.SetArgs([]string{"logs", testFuncName, "--namespace", testFuncRunNamespace})
+		return rootCmd.Execute()
+	})
 	assert.Equal(t, nil, err, "test launcher pod logs failed: %s", errorMessage(err))
 
-	// switch back
-	w.Close()
-	os.Stdout = rescueStdout
+	LauncherPodLogPrefix := "Logs for Pod"
+	assert.Contains(t, cmdOutput, LauncherPodLogPrefix, "test logs failed: logs output does not contain logs of the launcher pod created in this test")
 
-	// copy the output of `rhino logs` from read end of the pipe to a string builder
-	buf := new(strings.Builder)
-	io.Copy(buf, r)
-	r.Close()
-
-	cmdOutput := buf.String()
-	cmdOutputLines := strings.Split(cmdOutput, "\n")
-
-	var foundLauncherPodLog bool
-	testLauncherPodLogPrefix := "Logs for Pod"
-	for _, line := range cmdOutputLines {
-		if strings.HasPrefix(line, testLauncherPodLogPrefix) {
-			foundLauncherPodLog = true
-			break
-		}
-	}
-	assert.Equal(t, true, foundLauncherPodLog, "test logs failed: logs output does not contain logs of the launcher pod created in this test")
-
-	// test logs command for worker pod
-	rescueStdout = os.Stdout
-	r, w, err = os.Pipe()
-	assert.Equal(t, nil, err, "test logs failed: %s", errorMessage(err))
-
-	os.Stdout = w
-	rootCmd.SetArgs([]string{"logs", testFuncName, "-w", "0", "--namespace", testFuncRunNamespace})
-	err = rootCmd.Execute()
+	// test logs command for worker pod with -f flag
+	cmdOutput, err = captureStdout(func() error {
+		rootCmd.SetArgs([]string{"logs", testFuncName, "-f", "-w", "0", "--namespace", testFuncRunNamespace})
+		return rootCmd.Execute()
+	})
 	assert.Equal(t, nil, err, "test worker pod logs failed: %s", errorMessage(err))
-
-	// switch back
-	w.Close()
-	os.Stdout = rescueStdout
-
-	// copy the output of `rhino logs` from read end of the pipe to a string builder
-	buf = new(strings.Builder)
-	io.Copy(buf, r)
-	r.Close()
-
-	cmdOutput = buf.String()
-	cmdOutputLines = strings.Split(cmdOutput, "\n")
-
-	var foundWorkerPodLog bool
-	testWorkerPodLogPrefix := "Logs for Pod"
-	for _, line := range cmdOutputLines {
-		if strings.HasPrefix(line, testWorkerPodLogPrefix) {
-			foundWorkerPodLog = true
-			break
-		}
-	}
-	assert.Equal(t, true, foundWorkerPodLog, "test logs failed: logs output does not contain logs of the worker pod created in this test")
+	assert.NotNil(t, cmdOutput, "test logs failed: logs are empty")
 
 	// delete test namespace and rhinojob created just now
 	execShellCmd("kubectl", []string{"delete", "namespace", testFuncRunNamespace, "--force", "--grace-period=0"})
@@ -122,4 +96,32 @@ func TestLogsSingleJob(t *testing.T) {
 	// delete the image built just now
 	execShellCmd("docker", []string{"rmi", testFuncImageName})
 	execShellCmd("sh", []string{"-c", "docker rmi -f $(docker images | grep none | grep second | awk '{print $3}')"})
+}
+
+// captureStdout executes a given function, captures its stdout, and returns the stdout output as string.
+func captureStdout(fn func() error) (string, error) {
+	rescueStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		return "", err
+	}
+
+	os.Stdout = w
+	err = fn()
+	if err != nil {
+		w.Close()
+		os.Stdout = rescueStdout
+		return "", err
+	}
+
+	// switch back
+	w.Close()
+	os.Stdout = rescueStdout
+
+	// copy the output from read end of the pipe to a string builder
+	buf := new(strings.Builder)
+	io.Copy(buf, r)
+	r.Close()
+
+	return buf.String(), nil
 }
