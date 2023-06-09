@@ -31,7 +31,7 @@ func TestNewRootCommand(t *testing.T) {
 	assert.Equal(t, "\nRHINO-CLI - Manage your OpenRHINO functions and jobs", rootCmd.Short)
 
 	// Test if rootCmd has the correct subcommands
-	expectedSubcommands := []string{"create", "build", "delete", "run", "list", "docker-run", "version"}
+	expectedSubcommands := []string{"create", "build", "delete", "run", "list", "docker-run", "version", "logs"}
 	actualSubcommands := getSubcommandNames(rootCmd)
 
 	assert.Equal(t, len(expectedSubcommands), len(actualSubcommands), "Number of subcommands should be equal")
