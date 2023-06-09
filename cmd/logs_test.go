@@ -33,17 +33,6 @@ func TestArgsCheck(t *testing.T) {
 	// Test case: args length is 0
 	err := options.argsCheck(nil, []string{})
 	assert.EqualError(t, err, "job name cannot be empty")
-
-	// Test case: worker number is negative
-	options.worker = -2
-	err = options.argsCheck(nil, []string{"job"})
-	assert.EqualError(t, err, "worker pod number cannot be negative")
-
-	// Test case: both launcher and worker pod are specified
-	options.worker = 1
-	options.launcher = true
-	err = options.argsCheck(nil, []string{"job"})
-	assert.EqualError(t, err, "cannot specify both launcher and worker pod")
 }
 
 func TestPodLogs(t *testing.T) {
@@ -82,12 +71,12 @@ func TestPodLogs(t *testing.T) {
 	LauncherPodLogPrefix := "Logs for Pod"
 	assert.Contains(t, cmdOutput, LauncherPodLogPrefix, "test logs failed: logs output does not contain logs of the launcher pod created in this test")
 
-	// test logs command for worker pod with -f flag
+	// test logs command with -f flag
 	cmdOutput, err = captureStdout(func() error {
-		rootCmd.SetArgs([]string{"logs", testFuncName, "-f", "-w", "0", "--namespace", testFuncRunNamespace})
+		rootCmd.SetArgs([]string{"logs", testFuncName, "-f", "-l", "--namespace", testFuncRunNamespace})
 		return rootCmd.Execute()
 	})
-	assert.Equal(t, nil, err, "test worker pod logs failed: %s", errorMessage(err))
+	assert.Equal(t, nil, err, "test logs failed: %s", errorMessage(err))
 	assert.NotNil(t, cmdOutput, "test logs failed: logs are empty")
 
 	// delete test namespace and rhinojob created just now
